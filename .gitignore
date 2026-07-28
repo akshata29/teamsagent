@@ -1,0 +1,23 @@
+# Node
+node_modules/
+dist/
+frontend/dist/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+backend/audit_log.jsonl
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+!**/.env.local.example
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+
+.copilot-tracking/

@@ -1,0 +1,6 @@
+# Deployment / seeding script dependencies
+azure-identity>=1.19.0
+azure-ai-projects>=2.3.0
+azure-search-documents==12.1.0b1
+openai>=1.40.0
+requests>=2.32.0

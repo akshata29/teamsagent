@@ -1,0 +1,6 @@
+# Hosted agent container dependencies
+agent-framework
+agent-framework-foundry-hosting
+azure-ai-projects>=2.3.0
+azure-search-documents==12.1.0b1
+azure-identity>=1.19.0

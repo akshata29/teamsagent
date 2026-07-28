@@ -1,0 +1,24 @@
+{
+  "name": "capmarkets-proxy",
+  "version": "1.0.0",
+  "description": "Option B — M365 Agents SDK Custom Engine Agent proxy: Teams SSO -> OBO -> Capital Markets backend/hosted agent",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test-tool": "teamsapptester start"
+  },
+  "dependencies": {
+    "@microsoft/agents-hosting": "^0.2.0",
+    "@microsoft/agents-hosting-express": "^0.2.0",
+    "axios": "^1.7.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@microsoft/teams-app-test-tool": "^0.2.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.4"
+  }
+}
