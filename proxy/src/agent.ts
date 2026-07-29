@@ -1,75 +1,138 @@
-// Option B — Custom Engine Agent message handler.
+// Option B — Custom Engine Agent proxy (the OBO trust boundary).
 //
-// Flow (the per-user OBO trust boundary):
-//   1. Teams SSO provides the signed-in user token.
-//   2. exchangeToken (MSAL OBO) exchanges it for a downstream token
-//      (OBOConnectionName / OBOScopes = https://search.azure.com/.default).
-//   3. The proxy calls the Capital Markets backend, which performs the per-user
-//      AI Search retrieval + hosted-agent synthesis and returns a grounded answer.
-//
-// This file shows the wiring; `atk provision` generates the bot/app registrations.
+// Flow per Teams message:
+//   1. The `search` authorization handler runs Teams SSO (auto-triggered because the
+//      message route lists it in authHandlers).
+//   2. authorization.exchangeToken(...) performs the On-Behalf-Of exchange for the
+//      Azure AI Search scope — a token that represents the SIGNED-IN Teams user.
+//   3. We POST the Capital Markets backend Option B endpoint, passing that token in
+//      `x-ms-query-source-authorization` so Azure AI Search trims documents per user.
+//   4. The backend returns the grounded answer + entitled docs; we render an Adaptive
+//      Card (Teams-native rich UI with citations + a "trimmed for you" footer).
+import { ActivityTypes } from "@microsoft/agents-activity";
+import {
+  AgentApplication,
+  CardFactory,
+  MemoryStorage,
+  MessageFactory,
+  TurnContext,
+} from "@microsoft/agents-hosting";
+import axios from "axios";
+import config from "./config";
+import { buildResearchCard, buildWelcomeCard } from "./cards";
 
-import { ActivityHandler, TurnContext } from '@microsoft/agents-hosting'
-import axios from 'axios'
+const AUTH_HANDLER = "search";
 
-const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8010'
-const OBO_CONNECTION = process.env.OBOConnectionName ?? 'search-obo'
-const PERSONA_ID = process.env.DEMO_PERSONA_ID ?? 'equity-research'
+// Define storage and application
+const storage = new MemoryStorage();
+export const agentApp = new AgentApplication({
+  storage,
+  authorization: {
+    // Teams SSO + OBO handler. The Azure Bot OAuth connection issues the user token;
+    // oboScopes drives the On-Behalf-Of exchange for Azure AI Search.
+    [AUTH_HANDLER]: {
+      azureBotOAuthConnectionName: config.oauthConnectionName,
+      oboScopes: [config.searchScope],
+      enableSso: true,
+      title: "Sign in to Capital Markets Research",
+      text: "Sign in so your results are trimmed to your entitlements.",
+    },
+  },
+});
 
-export class CapMarketsAgent extends ActivityHandler {
-  constructor() {
-    super()
-
-    this.onMessage(async (context: TurnContext, next) => {
-      const query = (context.activity.text ?? '').trim()
-      if (!query) {
-        await context.sendActivity('Ask a Capital Markets research question.')
-        await next()
-        return
-      }
-
-      // 1 + 2: Teams SSO -> OBO exchange for the Azure AI Search scope.
-      const userSearchToken = await exchangeForSearchToken(context)
-
-      // 3: Call the backend Option B path (per-user OBO retrieval + hosted agent).
-      const { data } = await axios.post(`${BACKEND_URL}/api/demo/optionB/invoke`, {
-        persona_id: resolvePersona(context),
-        query,
-        variant: 'b1',
-      }, {
-        headers: userSearchToken
-          ? { 'x-ms-query-source-authorization': userSearchToken }
-          : {},
-      })
-
-      const cited = (data.doc_hits ?? []).map((d: { id: string }) => `[${d.id}]`).join(' ')
-      await context.sendActivity(`${data.answer}\n\nSources: ${cited || '(none)'}`)
-      await next()
-    })
+/** Run a research query: OBO -> backend Option B -> Adaptive Card. */
+async function runResearch(context: TurnContext, query: string): Promise<void> {
+  let searchToken: string | undefined;
+  if (config.requireSso) {
+    try {
+      // On-Behalf-Of: exchange the Teams SSO token for an Azure AI Search token.
+      const tokenResponse = await agentApp.authorization.exchangeToken(
+        context,
+        [config.searchScope],
+        AUTH_HANDLER,
+      );
+      searchToken = tokenResponse?.token;
+    } catch (ex) {
+      // Not signed in yet / exchange pending — fall through and let the backend
+      // fail-closed to public-only, with a "sign in" hint on the card.
+      console.error("[OBO] exchangeToken failed:", (ex as Error)?.message ?? ex);
+    }
   }
-}
 
-/** Exchange the Teams-user token for a Search-scoped OBO token. */
-async function exchangeForSearchToken(context: TurnContext): Promise<string | undefined> {
   try {
-    // The Agents SDK exposes the OBO exchange on the user-token client.
-    // Signature varies by SDK version: exchangeToken / ExchangeTurnTokenAsync.
-    const userTokenClient = (context.adapter as unknown as {
-      exchangeToken?: (ctx: TurnContext, connectionName: string, scopes: string[]) => Promise<{ token: string }>
-    }).exchangeToken
-    if (!userTokenClient) return undefined
-    const result = await userTokenClient(context, OBO_CONNECTION, [
-      'https://search.azure.com/.default',
-    ])
-    return result?.token
-  } catch {
-    // Fail-closed: without a token the backend returns public-only documents.
-    return undefined
+    const { data } = await axios.post(
+      `${config.backendUrl}/api/demo/optionB/invoke`,
+      { persona_id: config.defaultPersonaId, query, variant: "b1" },
+      {
+        headers: searchToken ? { "x-ms-query-source-authorization": searchToken } : {},
+        timeout: 60000,
+      },
+    );
+    await context.sendActivity(
+      MessageFactory.attachment(CardFactory.adaptiveCard(buildResearchCard(data))),
+    );
+  } catch (err) {
+    await context.sendActivity(
+      `Sorry - I couldn't reach the research backend. ${
+        (err as Error)?.message ?? ""
+      }`.trim(),
+    );
   }
 }
 
-function resolvePersona(context: TurnContext): string {
-  // In production, derive the persona/entitlements from the signed-in user's
-  // Entra group membership. For the demo we default to a configured persona.
-  return (context.activity.from?.aadObjectId && PERSONA_ID) || PERSONA_ID
+agentApp.onConversationUpdate("membersAdded", async (context: TurnContext) => {
+  await context.sendActivity(
+    MessageFactory.attachment(CardFactory.adaptiveCard(buildWelcomeCard())),
+  );
+});
+
+// Message route. When SSO is required (real Teams), listing AUTH_HANDLER auto-triggers
+// the Teams sign-in flow before the handler runs. In the Agents Playground (no SSO),
+// REQUIRE_SSO=false so the route is unauthenticated and the OBO exchange is skipped.
+const messageHandler = async (context: TurnContext): Promise<void> => {
+  // Adaptive Card Action.Submit sends the refinement query in activity.value.
+  const submitted = (context.activity.value as { query?: string } | undefined)?.query;
+  const query = (submitted ?? context.activity.text ?? "").trim();
+  if (!query) {
+    await context.sendActivity("Ask a Capital Markets research question.");
+    return;
+  }
+  await runResearch(context, query);
+};
+
+if (config.requireSso) {
+  agentApp.onActivity(ActivityTypes.Message, messageHandler, [AUTH_HANDLER]);
+} else {
+  agentApp.onActivity(ActivityTypes.Message, messageHandler);
+}
+
+agentApp.authorization.onSignInSuccess(async (context: TurnContext) => {
+  await context.sendActivity("Signed in - ask your question to see per-user results.");
+});
+
+// Surface the real reason an SSO/OAuth sign-in failed (AADSTS code, consent, etc.)
+// instead of the SDK's generic "Failed to sign-in" card.
+// SDK signature: (context, state, authHandlerId, errorMessage).
+const onFail = (agentApp.authorization as unknown as {
+  onSignInFailure?: (
+    h: (context: TurnContext, state: unknown, authHandlerId?: string, reason?: unknown) => Promise<void> | void,
+  ) => void;
+}).onSignInFailure;
+if (typeof onFail === "function") {
+  onFail.call(
+    agentApp.authorization,
+    async (context: TurnContext, _state: unknown, authHandlerId?: string, reason?: unknown) => {
+      let detail: string;
+      try {
+        detail =
+          typeof reason === "string" ? reason : JSON.stringify(reason, Object.getOwnPropertyNames(reason ?? {}));
+      } catch {
+        detail = String(reason);
+      }
+      console.error(`[SSO] sign-in failed (handler=${authHandlerId}):`, detail);
+      await context.sendActivity(
+        "Sign-in couldn't complete silently. (Check proxy logs for the AADSTS detail.)",
+      );
+    },
+  );
 }

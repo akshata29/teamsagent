@@ -14,6 +14,12 @@ from app.infra.settings import Settings, get_settings
 
 logger = logging.getLogger(__name__)
 
+# Prefix of the fabricated persona assertion produced by
+# ``persona_service.mock_user_assertion`` for offline/no-SSO surfaces (e.g. the
+# Agents Playground, which has no real Teams SSO). Such a token is never a real
+# Entra JWT, so a live OBO exchange on it is guaranteed to fail with AADSTS50027.
+_DEMO_ASSERTION_PREFIX = "demo-user-assertion::"
+
 
 class OboError(RuntimeError):
     """Raised when an OBO exchange cannot be completed."""
@@ -30,6 +36,13 @@ def exchange_for_search_token(user_assertion: str, settings: Settings | None = N
     if settings.offline_mode or not settings.aad_client_id:
         logger.info("OBO exchange skipped (offline/demo mode)")
         return f"demo-search-token::{user_assertion}"
+
+    # No real Teams SSO (Playground / no-SSO surface): the caller handed us the
+    # fabricated persona assertion. Skip the live exchange — it would always fail
+    # AADSTS50027 — and fail closed to public-only without a noisy stack trace.
+    if user_assertion.startswith(_DEMO_ASSERTION_PREFIX):
+        logger.info("OBO skipped: no real user token (no-SSO surface); failing closed to public-only")
+        raise OboError("No real user token to exchange (no-SSO surface)")
 
     try:
         from azure.identity import OnBehalfOfCredential

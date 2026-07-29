@@ -1,24 +1,40 @@
 {
-  "name": "capmarkets-proxy",
-  "version": "1.0.0",
-  "description": "Option B — M365 Agents SDK Custom Engine Agent proxy: Teams SSO -> OBO -> Capital Markets backend/hosted agent",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "test-tool": "teamsapptester start"
-  },
-  "dependencies": {
-    "@microsoft/agents-hosting": "^0.2.0",
-    "@microsoft/agents-hosting-express": "^0.2.0",
-    "axios": "^1.7.0",
-    "dotenv": "^16.4.5"
-  },
-  "devDependencies": {
-    "@microsoft/teams-app-test-tool": "^0.2.0",
-    "tsx": "^4.16.0",
-    "typescript": "^5.5.4"
-  }
+    "name": "capmarketscea",
+    "version": "1.0.0",
+    "msteams": {
+        "teamsAppId": null
+    },
+    "description": "Option B — Custom Engine Agent proxy: Teams SSO + OBO -> Capital Markets backend (per-user Azure AI Search) with Adaptive Cards",
+    "author": "Microsoft",
+    "license": "MIT",
+    "main": "./lib/src/index.js",
+    "scripts": {
+        "dev:teamsfx": "env-cmd --silent -f .localConfigs npm run dev",
+        "dev:teamsfx:playground": "env-cmd --silent -f .localConfigs.playground npm run dev",
+        "dev:teamsfx:launch-playground": "agentsplayground -e http://localhost:3978/api/messages -c msteams",
+        "dev": "nodemon --exec node --inspect=9239 --signal SIGINT --import tsx ./src/index.ts",
+        "build": "tsc --build",
+        "start": "node ./lib/src/index.js",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "watch": "nodemon --exec \"npm run start\""
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com"
+    },
+    "dependencies": {
+        "@microsoft/agents-hosting-express": "^1.0.0",
+        "axios": "^1.7.0",
+        "undici": "^6.21.0"
+    },
+    "devDependencies": {
+        "@types/express": "^5.0.0",
+        "@types/node": "^22.0.0",
+        "env-cmd": "^10.1.0",
+        "nodemon": "^3.1.10",
+        "shx": "^0.4.0",
+        "ts-node": "^10.9.2",
+        "tsx": "^4.23.1",
+        "typescript": "^5.8.3"
+    }
 }
