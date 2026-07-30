@@ -114,6 +114,46 @@ Notes:
 - If SSO/OBO is not yet complete, the proxy omits the token and the backend fails **closed**
   to public-only documents with a "sign in" hint.
 
+#### Who does the OBO, step by step
+
+On the Teams path the **proxy is the trust boundary and does all the token work** — the
+backend only forwards what it receives. The mechanics in [proxy/src/agent.ts](../proxy/src/agent.ts):
+
+1. **SSO.** The `search` authorization handler silently signs the Teams user in (audience
+   `api://botid-{clientId}` — the app's own identity), producing the base token.
+2. **OBO in the proxy.** `agentApp.authorization.exchangeToken(context, [searchScope], "search")`
+   exchanges that SSO token On-Behalf-Of for an **Azure AI Search-scoped token** that
+   represents the signed-in user. The returned `tokenResponse.token` is the `searchToken`.
+3. **Pass to backend.** The proxy `POST`s `optionB/invoke` with header
+   `x-ms-query-source-authorization: <searchToken>`.
+4. **Backend uses it directly.**
+   [auth_context.from_headers](../backend/app/services/auth_context.py) reads that header into
+   `UserAuth.search_token`, and `per_user_search` hands it straight to Azure AI Search as
+   `x_ms_query_source_authorization`. **The backend performs no OBO on this path** — the token
+   is already exchanged.
+
+Audience / scope progression:
+
+```text
+Teams user session
+  → (SSO)             token aud = api://botid-{clientId}     [app's own identity]
+  → (OBO in proxy)    token aud = https://search.azure.com   [the user's Search token]
+  → backend → Azure AI Search  (native ACL trims to this user's entitlements)
+```
+
+#### Teams vs. web app — where the OBO happens
+
+This is the one contrast worth memorizing:
+
+| Path | Who performs the OBO | What the backend receives | Header used |
+|---|---|---|---|
+| **Teams (Option B)** | The **proxy** (`exchangeToken`) | An **already-exchanged** Search token | `x-ms-query-source-authorization` |
+| **Web app (Option B)** | The **backend** (`obo_service`) | The user's **own** token (needs OBO) | `Authorization: Bearer` |
+
+Both converge on the identical `per_user_search` call — that is the "one agent, two front
+doors" design. The browser never holds OBO credentials; on the web path only the backend does,
+and on the Teams path only the proxy does.
+
 ## 3. Web app — Option A (app-only)
 
 The SPA calls the app-only endpoint. The backend runs Search with the application/admin
@@ -203,3 +243,75 @@ flowchart LR
 Both Option B paths resolve to the identical per-user Search call, which is why a single
 deployed agent serves both surfaces with correct per-user document trimming. Option A on
 either surface skips identity entirely and uses the application identity.
+
+## Nuances and gotchas (read before demoing Option A)
+
+These are subtle behaviors that surprised us in testing. They are expected, but non-obvious.
+
+### The Teams-published hosted agent (Option A) returns *zero* documents — including public
+
+When you chat with the **Foundry hosted agent published directly to Teams** (flow 1), you may
+see a response like *"I looked in our app-only research but did not find any entitled
+documents on this topic."* — with **no documents at all**, not even the public one. This is
+**correct and expected** for that path. Two independent reasons combine:
+
+1. **The "Foundry login" prompt is not an OBO.** When the hosted agent asks you to sign in to
+   Foundry, that authenticates you to the **Foundry agent runtime** so it may run the agent.
+   It does **not** exchange your token On-Behalf-Of for a Search token. On Option A the Teams
+   user identity never reaches the tool call — the in-container Search tool queries with the
+   **container's managed identity**, not your (admin) identity. Signing in as admin therefore
+   changes nothing about what the tool can retrieve.
+
+2. **The index has native ACL enabled** (`permissionFilterOption=enabled`). Native ACL trims
+   results by evaluating the **caller's real Entra groups/oid from a user token**. A query
+   that arrives with no qualifying user identity (the managed identity is not a member of any
+   document's ACL) matches **zero documents**. Native ACL has no token-less "public" concept,
+   so even the public doc (`DISC-000`) is filtered out.
+
+Chain: no OBO on Option A → Search runs as the container identity → native ACL finds no
+matching membership → 0 docs → *"no entitled research."*
+
+This is actually the intended lesson of Option A: because the user's identity can't flow to
+the tool, a document-security-enabled index returns nothing per user. That gap is exactly what
+Option B (proxy SSO + OBO) closes.
+
+### The web app's Option A behaves differently — it *does* return documents
+
+The web app's `app_only_search` in
+[backend/app/services/search_service.py](../backend/app/services/search_service.py) does **not**
+go token-less into native ACL. It either:
+
+- presents the backend's **admin managed-identity token** (`option_a_admin_identity` → full
+  entitlements, no filter), or
+- applies a plain **`classification ne 'mnpi'` filter** (undifferentiated non-MNPI slice).
+
+So the web-app Option A returns a baseline set, while the **Teams-published** Option A returns
+0. Same "Option A" label, two different retrieval implementations — do not expect them to match.
+
+| Option A surface | Retrieval mechanism | Typical result |
+|---|---|---|
+| Teams (published hosted agent) | Container managed identity → **native ACL** | 0 docs ("no entitled research") |
+| Web app (`optionA/invoke`) | Admin token **or** `classification ne 'mnpi'` filter | Baseline / non-MNPI docs |
+
+### How to make Teams Option A show a public baseline (if desired)
+
+If you want the Teams-published Option A demo to surface a shared public set instead of 0 docs,
+the in-container tool must stop relying on native ACL. Pick one:
+
+- Apply a GA-style filter in the tool: `group_ids/any(g: search.in(g, '<GRP_ALL>'))`.
+- Query without ACL enforcement and post-filter to public / non-MNPI.
+- Disable `permissionFilterOption` on the index for the Option A demo.
+- Add the container managed identity's `oid` to the public doc's `UserIds`.
+
+### Native ACL vs GA trimming (why the same persona can look different)
+
+- **Native ACL** (`use_native_acl=true`) trims by the **real signed-in user's** Entra
+  groups/oid resolved from the OBO token. The persona dropdown does not change it — the
+  compliance/admin tester always sees their full entitlement regardless of the selected
+  persona.
+- **GA security trimming** (`use_native_acl=false`) builds the filter from the **persona's**
+  `entra_group_id` (`group_ids/any(search.in(...))`), so different personas yield different
+  subsets for the same tester. Empty groups fall back to public (`GRP_ALL`) only.
+
+Use GA trimming when you want to demonstrate per-persona differences as a single tester; use
+native ACL when you want true, token-driven per-user security.
