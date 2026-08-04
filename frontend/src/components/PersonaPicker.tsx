@@ -31,7 +31,7 @@ export default function PersonaPicker({ personas, selectedId, onSelect }: Props)
             <div className="text-xs text-gray-400 mt-1">{p.role}</div>
             <div className="text-[11px] text-gray-500 mt-2 leading-snug">{p.entitlement_summary}</div>
             <div className="text-[10px] text-gray-600 mt-2 font-mono truncate">
-              group: {p.entra_group_id}
+              user: {p.entra_group_id}
             </div>
           </button>
         )

@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useMsal } from '@azure/msal-react'
+import type { AccountInfo } from '@azure/msal-browser'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import { Play, Sparkles } from 'lucide-react'
 import { demoApi } from '@/api/client'
-import type { CompareResult } from '@/types/demo'
+import type { CompareResult, Persona } from '@/types/demo'
 import PageHeader from '@/components/PageHeader'
 import PersonaPicker from '@/components/PersonaPicker'
 import VariantToggle from '@/components/VariantToggle'
@@ -16,7 +18,23 @@ const SAMPLE_QUERIES = [
   'What is our duration positioning?',
 ]
 
+const norm = (s?: string | null) => (s ?? '').toLowerCase().replace(/[^a-z0-9]/g, '')
+
+/** Match the signed-in Entra account to a persona by display name / UPN (best-effort). */
+function matchPersona(personas: Persona[], account?: AccountInfo | null): Persona | undefined {
+  if (!account) return undefined
+  const name = norm(account.name)
+  const user = norm(account.username)
+  return personas.find((p) => {
+    const disp = norm(p.display_name)
+    return disp.length > 2 && (name.includes(disp) || user.includes(disp))
+  })
+}
+
 export default function DemoPage() {
+  const { accounts } = useMsal()
+  const account = accounts[0] ?? null
+
   const [personaId, setPersonaId] = useState('equity-research')
   const [query, setQuery] = useState(SAMPLE_QUERIES[0])
   const [variant, setVariant] = useState<'b1' | 'b2'>('b1')
@@ -24,6 +42,16 @@ export default function DemoPage() {
 
   const personasQ = useQuery({ queryKey: ['personas'], queryFn: demoApi.getPersonas })
   const corpusQ = useQuery({ queryKey: ['corpus'], queryFn: demoApi.getCorpus })
+
+  // Auto-select the persona that matches the actual signed-in user (once).
+  const autoSelected = useRef(false)
+  const signedInPersona = matchPersona(personasQ.data ?? [], account)
+  useEffect(() => {
+    if (!autoSelected.current && signedInPersona) {
+      setPersonaId(signedInPersona.id)
+      autoSelected.current = true
+    }
+  }, [signedInPersona])
 
   const runM = useMutation({
     mutationFn: () => demoApi.compare({ persona_id: personaId, query, variant }),
@@ -38,7 +66,14 @@ export default function DemoPage() {
       />
 
       <div className="card p-5 space-y-4">
-        <div className="section-title">1 · Choose a persona (information barrier)</div>
+        <div className="flex items-center justify-between">
+          <div className="section-title">1 · Choose a user (information barrier)</div>
+          {signedInPersona && (
+            <span className="text-[11px] text-status-success">
+              Signed in as {signedInPersona.display_name} · {signedInPersona.role}
+            </span>
+          )}
+        </div>
         {personasQ.data && (
           <PersonaPicker
             personas={personasQ.data}
@@ -88,7 +123,11 @@ export default function DemoPage() {
       </div>
 
       {corpusQ.data && (
-        <DocTrimVisualizer corpus={corpusQ.data} compare={compare} />
+        <DocTrimVisualizer
+          corpus={corpusQ.data}
+          compare={compare}
+          currentUserLabel={signedInPersona?.display_name}
+        />
       )}
     </div>
   )

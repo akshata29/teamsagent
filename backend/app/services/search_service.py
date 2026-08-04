@@ -156,6 +156,28 @@ def catalog() -> List[DocHit]:
             title=str(d["title"]),
             classification=Classification(str(d.get("classification", "internal"))),
             snippet="",
+            entitled_to=_entitled_personas(d),
         )
         for d in SYNTHETIC_DOCS
     ]
+
+
+def _entitled_personas(doc: dict) -> List[str]:
+    """Human-readable labels for who is entitled to a document (for the access map).
+
+    Derives from the doc's ``group_ids``/``user_ids`` against the persona registry:
+    a persona is listed when its Entra principal appears on the document, and public
+    docs (``GRP_ALL``) are labelled "Everyone".
+    """
+    from app.services import persona_service
+
+    principals = set(doc.get("group_ids", [])) | set(doc.get("user_ids", []))
+    labels = [
+        f"{p.display_name} ({p.role})"
+        for p in persona_service.list_personas()
+        if p.entra_group_id in principals
+    ]
+    if GRP_ALL in doc.get("group_ids", []):
+        labels = ["Everyone", *labels]
+    return labels
+

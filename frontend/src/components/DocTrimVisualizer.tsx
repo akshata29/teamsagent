@@ -4,6 +4,7 @@ import type { CompareResult, DocHit } from '@/types/demo'
 interface Props {
   corpus: DocHit[]
   compare?: CompareResult
+  currentUserLabel?: string
 }
 
 type Cell = 'visible' | 'trimmed'
@@ -18,7 +19,7 @@ function cellClass(state: Cell) {
  * Grid showing, for each document, whether Option A and Option B expose it to the
  * selected persona. The A/B delta is the document-level-security teaching point.
  */
-export default function DocTrimVisualizer({ corpus, compare }: Props) {
+export default function DocTrimVisualizer({ corpus, compare, currentUserLabel }: Props) {
   const aVisible = new Set(compare?.option_a.visible_doc_ids ?? [])
   const bVisible = new Set(compare?.option_b.visible_doc_ids ?? [])
   const diff = new Set(compare?.difference_doc_ids ?? [])
@@ -28,7 +29,8 @@ export default function DocTrimVisualizer({ corpus, compare }: Props) {
       <div className="section-title mb-1">Document-level access map</div>
       <p className="text-xs text-gray-500 mb-4">
         Green = returned to the selected persona. Rows highlighted amber are documents Option A
-        exposed that Option B correctly trimmed away.
+        exposed that Option B correctly trimmed away. The chips under each document show who is
+        entitled to it{currentUserLabel ? ' — your signed-in user is highlighted' : ''}.
       </p>
       <div className="space-y-1.5">
         <div className="grid grid-cols-12 gap-2 text-[10px] uppercase tracking-wider text-gray-600 px-1">
@@ -51,6 +53,27 @@ export default function DocTrimVisualizer({ corpus, compare }: Props) {
                 <div className="text-[10px] font-mono text-gray-600">
                   {doc.id} · {doc.classification}
                 </div>
+                {doc.entitled_to && doc.entitled_to.length > 0 && (
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {doc.entitled_to.map((who) => {
+                      const isYou = !!currentUserLabel && who.startsWith(currentUserLabel)
+                      return (
+                        <span
+                          key={who}
+                          className={clsx(
+                            'text-[9px] px-1.5 py-0.5 rounded-full border',
+                            isYou
+                              ? 'border-status-success/60 bg-status-success/15 text-status-success font-semibold'
+                              : 'border-accent/30 bg-accent/10 text-accent-hover',
+                          )}
+                        >
+                          {who}
+                          {isYou ? ' · you' : ''}
+                        </span>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
               <div className="col-span-2 flex justify-center">
                 <span

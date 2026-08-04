@@ -19,31 +19,31 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from deploy.synthetic_data import (  # noqa: E402
-    GRP_COMPLIANCE,
-    GRP_EQUITY_RESEARCH,
-    GRP_FI_PM,
+    USER_ADMIN,
+    USER_FABRIC_A,
+    USER_FABRIC_B,
 )
 
 _PERSONAS: Dict[str, Persona] = {
     "equity-research": Persona(
         id="equity-research",
-        display_name="Alex Chen",
-        role="Equity Research Analyst",
-        entra_group_id=GRP_EQUITY_RESEARCH,
+        display_name="Fabric User A",
+        role="Equity Research desk",
+        entra_group_id=USER_FABRIC_A,
         entitlement_summary="Equity research notes and public commentary. No MNPI, no fixed-income desk.",
     ),
     "fi-pm": Persona(
         id="fi-pm",
-        display_name="Priya Nair",
-        role="Fixed-Income Portfolio Manager",
-        entra_group_id=GRP_FI_PM,
+        display_name="Fabric User B",
+        role="Fixed-Income desk",
+        entra_group_id=USER_FABRIC_B,
         entitlement_summary="Credit / rates research and public commentary. No MNPI, no equity desk notes.",
     ),
     "compliance": Persona(
         id="compliance",
-        display_name="Dana Okoro",
-        role="Compliance Officer",
-        entra_group_id=GRP_COMPLIANCE,
+        display_name="Admin",
+        role="Compliance (full control)",
+        entra_group_id=USER_ADMIN,
         entitlement_summary="Full access incl. MNPI deal memos and surveillance reports (behind the barrier).",
     ),
 }

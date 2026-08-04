@@ -1,31 +1,32 @@
 """Synthetic Capital Markets research corpus for the demo.
 
 ALL CONTENT IS SYNTHETIC and for demonstration only — no real market data, no real
-MNPI. Document-level security is modeled via Entra group GUIDs on each document,
-demonstrating an information barrier between Equity Research, Fixed-Income, and
-Compliance desks.
+MNPI. Document-level security is modeled via Entra USER object-IDs on each document,
+demonstrating an information barrier between the Equity Research and Fixed-Income desks
+and a full-control Compliance/Admin user.
 
-The group GUIDs here MUST match `backend/app/services/persona_service.py`.
+The user OIDs here MUST match `backend/app/services/persona_service.py`.
 """
 
 from __future__ import annotations
 
 from typing import Dict, List
 
-# --- Canonical Entra principals ---
-# Equity Research and Fixed-Income are real Entra security GROUPS (matched via GroupIds).
-GRP_EQUITY_RESEARCH = "1d3ff50d-4dc5-4a8d-8074-b92731dc2bd8"
-GRP_FI_PM = "ec5f7a00-b2fc-4650-bdc8-01f2d718ea6c"
-# Compliance is granted at the USER level (full control) via this Entra object-ID
-# (matched via UserIds). This user sees every document, including MNPI.
-GRP_COMPLIANCE = "91a5dd7e-5b13-41f8-aea1-d7ecaed5760c"
+# --- Canonical Entra principals (all three are USER object-IDs in this tenant) ---
+# IMPORTANT: these are USER OIDs, NOT group GUIDs. AI Search native ACL matches a
+# signed-in user's OID against the index ``UserIds`` field, so each user's OID must
+# live in the docs' ``user_ids`` (never ``group_ids``). Verified live via `az ad user`.
+USER_FABRIC_A = "1d3ff50d-4dc5-4a8d-8074-b92731dc2bd8"  # fabricusera@ — Equity Research desk
+USER_FABRIC_B = "ec5f7a00-b2fc-4650-bdc8-01f2d718ea6c"  # fabricuserb@ — Fixed-Income desk
+USER_ADMIN = "91a5dd7e-5b13-41f8-aea1-d7ecaed5760c"     # admin@ — Compliance, full control
 # Special value understood by AI Search native ACLs / demo trimming: visible to everyone.
 GRP_ALL = "all"
 
 
 # Each doc: id, title, classification, content, group_ids (entitled groups),
-# user_ids (entitled individual users). The full-control Compliance user is added to
-# user_ids of every non-public doc so that identity sees everything.
+# user_ids (entitled individual users). Desk entitlements are modeled per-USER (their
+# OID in user_ids). The full-control Admin user is added to user_ids of every non-public
+# doc so that identity sees everything. Only the public disclaimer uses group_ids (GRP_ALL).
 SYNTHETIC_DOCS: List[Dict[str, object]] = [
     {
         "id": "EQ-RES-001",
@@ -36,8 +37,8 @@ SYNTHETIC_DOCS: List[Dict[str, object]] = [
             "accelerating AI-accelerator demand and easing inventory. Preferred names screen "
             "well on FCF yield and design-win momentum. Key risk: export-control headlines."
         ),
-        "group_ids": [GRP_EQUITY_RESEARCH],
-        "user_ids": [GRP_COMPLIANCE],
+        "group_ids": [],
+        "user_ids": [USER_FABRIC_A, USER_ADMIN],
     },
     {
         "id": "EQ-RES-002",
@@ -47,8 +48,8 @@ SYNTHETIC_DOCS: List[Dict[str, object]] = [
             "SYNTHETIC RESEARCH. With rates volatility elevated, we highlight defensive "
             "staples with pricing power and stable gross margins as a lower-beta ballast."
         ),
-        "group_ids": [GRP_EQUITY_RESEARCH],
-        "user_ids": [GRP_COMPLIANCE],
+        "group_ids": [],
+        "user_ids": [USER_FABRIC_A, USER_ADMIN],
     },
     {
         "id": "FI-CR-014",
@@ -58,8 +59,8 @@ SYNTHETIC_DOCS: List[Dict[str, object]] = [
             "SYNTHETIC RESEARCH. Selective add in single-B energy credits where coverage "
             "ratios and hedged production support spread tightening; avoid weakest refiners."
         ),
-        "group_ids": [GRP_FI_PM],
-        "user_ids": [GRP_COMPLIANCE],
+        "group_ids": [],
+        "user_ids": [USER_FABRIC_B, USER_ADMIN],
     },
     {
         "id": "FI-CR-021",
@@ -69,8 +70,8 @@ SYNTHETIC_DOCS: List[Dict[str, object]] = [
             "SYNTHETIC RESEARCH. Prefer the belly of the IG financials curve; new-issue "
             "concessions have normalized and dispersion favors up-in-quality carry."
         ),
-        "group_ids": [GRP_FI_PM],
-        "user_ids": [GRP_COMPLIANCE],
+        "group_ids": [],
+        "user_ids": [USER_FABRIC_B, USER_ADMIN],
     },
     {
         "id": "RATES-STRAT-003",
@@ -80,8 +81,8 @@ SYNTHETIC_DOCS: List[Dict[str, object]] = [
             "SYNTHETIC RESEARCH. We favor modest long duration via 5s30s steepeners into "
             "the next data cycle; term premium looks rich to fair-value models."
         ),
-        "group_ids": [GRP_FI_PM, GRP_EQUITY_RESEARCH],
-        "user_ids": [GRP_COMPLIANCE],
+        "group_ids": [],
+        "user_ids": [USER_FABRIC_A, USER_FABRIC_B, USER_ADMIN],
     },
     {
         "id": "DEAL-MEMO-007",
@@ -93,7 +94,7 @@ SYNTHETIC_DOCS: List[Dict[str, object]] = [
             "information behind the information barrier. Not for research or trading desks."
         ),
         "group_ids": [],
-        "user_ids": [GRP_COMPLIANCE],
+        "user_ids": [USER_ADMIN],
     },
     {
         "id": "SURV-021",
@@ -104,7 +105,7 @@ SYNTHETIC_DOCS: List[Dict[str, object]] = [
             "cross-desk information-barrier near-misses under review. Restricted distribution."
         ),
         "group_ids": [],
-        "user_ids": [GRP_COMPLIANCE],
+        "user_ids": [USER_ADMIN],
     },
     {
         "id": "DISC-000",

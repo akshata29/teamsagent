@@ -6,113 +6,39 @@ debug started web socket client
 debug started web socket client
 log Waiting for connection of endpoint: http://localhost:3978/api/messages
 log waiting for 1 resources: http://localhost:3978/api/messages
-debug Telemetry: agents-playground-server/error {"cleanProperties":{"stack":"\"Error: Conversation not found\\n    at 23683 (<REDACTED: user-file-path>:2:1254322)\\n    at __webpack_require__ (<REDACTED: user-file-path>:8:3085)\\n    at 91964 (<REDACTED: user-file-path>:5:1293677)\\n    at __webpack_require__ (<REDACTED: user-file-path>:8:3085)\\n    at 40862 (<REDACTED: user-file-path>:2:1793956)\\n    at __webpack_require__ (<REDACTED: user-file-path>:8:3085)\\n    at 87783 (<REDACTED: user-file-path>:5:1055073)\\n    at __webpack_require__ (<REDACTED: user-file-path>:8:3085)\\n    at <REDACTED: user-file-path>:8:3986\\n    at <REDACTED: user-file-path>:8:4036\"","message":"\"Conversation not found\"","code":"\"ConversationNotFound\""}}
-
-debug Telemetry: agents-playground-server/error {"cleanProperties":{"stack":"\"Error: Conversation not found\\n    at ApiError.wrapError (<REDACTED: user-file-path>:2:1253888)\\n    at ConversationApiValidator.validateRequestConversationIdParams (<REDACTED: user-file-path>:2:1213715)\\n    at ConversationApiValidator.validateCreateMessageRequest (<REDACTED: user-file-path>:2:1210054)\\n    at createMessage (<REDACTED: user-file-path>:5:189741)\\n    at Layer.handleRequest (<REDACTED: user-file-path>:2:2479409)\\n    at next (<REDACTED: user-file-path>:2:1618772)\\n    at <REDACTED: user-file-path>:2:1481194\\n    at AsyncResource.runInAsyncScope (node:async_hooks:206:9)\\n    at invokeCallback (<REDACTED: user-file-path>:2:2460432)\\n    at done (<REDACTED: user-file-path>:2:2460499)\"","message":"\"Conversation not found\"","code":"\"ConversationNotFound\"","statusCode":"404"}}
-
-debug Telemetry: agents-playground-server/error {"cleanProperties":{"stack":"\"Error: Conversation not found\\n    at ApiError.wrapError (<REDACTED: user-file-path>:2:1253888)\\n    at ConversationApiValidator.validateRequestConversationIdParams (<REDACTED: user-file-path>:2:1213715)\\n    at ConversationApiValidator.validateCreateMessageRequest (<REDACTED: user-file-path>:2:1210054)\\n    at createMessage (<REDACTED: user-file-path>:5:189741)\\n    at Layer.handleRequest (<REDACTED: user-file-path>:2:2479409)\\n    at next (<REDACTED: user-file-path>:2:1618772)\\n    at <REDACTED: user-file-path>:2:1481194\\n    at AsyncResource.runInAsyncScope (node:async_hooks:206:9)\\n    at invokeCallback (<REDACTED: user-file-path>:2:2460432)\\n    at done (<REDACTED: user-file-path>:2:2460499)\"","message":"\"Conversation not found\"","code":"\"ConversationNotFound\"","statusCode":"404"}}
-
-log wait-on(318084) Timed out waiting for: http://localhost:3978/api/messages; exiting with error
-debug Telemetry: agents-playground-server/error {"cleanProperties":{"stack":"\"Error: Timed out waiting for: http://localhost:3978/api/messages\\n    at <REDACTED: user-file-path>:2:1497483\\n    at doInnerSub (<REDACTED: user-file-path>:2:2727343)\\n    at outerNext (<REDACTED: user-file-path>:2:2727195)\\n    at OperatorSubscriber._this._next (<REDACTED: user-file-path>:2:2843063)\\n    at Subscriber.next (<REDACTED: user-file-path>:5:1001770)\\n    at AsyncAction.<anonymous> (<REDACTED: user-file-path>:5:1072339)\\n    at AsyncAction._execute (<REDACTED: user-file-path>:2:383912)\\n    at AsyncAction.execute (<REDACTED: user-file-path>:2:383685)\\n    at AsyncScheduler.flush (<REDACTED: user-file-path>:5:243755)\\n    at listOnTimeout (node:internal/timers:573:17)\"","message":"\"Timed out waiting for: http://localhost:3978/api/messages\""}}
-
+log wait-on(471624) complete
 log Events recording disabled.
 debug Telemetry: agents-playground-server/eventsRecording {"cleanProperties":{"enabled":"false"}}
 
 debug Telemetry: agents-playground-server/getConfig {"cleanProperties":{"internalConfig":"{\"locale\":\"en-US\",\"localTimezone\":\"America/Chicago\",\"channelId\":\"msteams\",\"debugConfig\":{\"eventsRecordingEnabled\":false}}"}}
 
-debug Telemetry: agents-playground-server/error {"cleanProperties":{"stack":"\"Error: Error\\n    at exports.UserBotError (<REDACTED: user-file-path>:2:1255135)\\n    at ConversationUpdateUserBotAccessor.handleAxiosError (<REDACTED: user-file-path>:2:2235297)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\\n    at async ConversationUpdateUserBotAccessor.sendActivity (<REDACTED: user-file-path>:2:2234559)\\n    at async ConversationUpdateUserBotAccessor.sendInstallationMemberAddedActivity (<REDACTED: user-file-path>:5:331700)\"","message":"\"Error\"","code":"\"UserBotError\""}}
+debug Telemetry: agents-playground-server/error {"cleanProperties":{"stack":"\"Error: Request failed with status code 401\\n    at exports.UserBotError (<REDACTED: user-file-path>:2:1255135)\\n    at InstallationUserBotAccessor.handleAxiosError (<REDACTED: user-file-path>:2:2235297)\\n    at InstallationUserBotAccessor.sendActivity (<REDACTED: user-file-path>:2:2234570)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\\n    at async InstallationUserBotAccessor.sendInstallationUpdateActivity (<REDACTED: user-file-path>:2:2179593)\"","message":"\"Request failed with status code 401\"","code":"\"UserBotError\"","innerHttpError":"{\"statusCode\":401,\"body\":{\"jwt-auth-error\":\"authorization header not found\"}}"}}
 
-log InternalServiceError: Error
-    at exports.UserBotError (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:1255135)
-    at ConversationUpdateUserBotAccessor.handleAxiosError (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:2235297)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async ConversationUpdateUserBotAccessor.sendActivity (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:2234559)
-    at async ConversationUpdateUserBotAccessor.sendInstallationMemberAddedActivity (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:5:331700) {
-  code: 'UserBotError',
-  innerHttpError: undefined
-}
-debug Telemetry: agents-playground-server/error {"cleanProperties":{"stack":"\"Error: Error\\n    at exports.UserBotError (<REDACTED: user-file-path>:2:1255135)\\n    at InstallationUserBotAccessor.handleAxiosError (<REDACTED: user-file-path>:2:2235297)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\\n    at async InstallationUserBotAccessor.sendActivity (<REDACTED: user-file-path>:2:2234559)\\n    at async InstallationUserBotAccessor.sendInstallationUpdateActivity (<REDACTED: user-file-path>:2:2179593)\"","message":"\"Error\"","code":"\"UserBotError\""}}
-
-log InternalServiceError: Error
+log InternalServiceError: Request failed with status code 401
     at exports.UserBotError (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:1255135)
     at InstallationUserBotAccessor.handleAxiosError (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:2235297)
+    at InstallationUserBotAccessor.sendActivity (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:2234570)
     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async InstallationUserBotAccessor.sendActivity (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:2234559)
     at async InstallationUserBotAccessor.sendInstallationUpdateActivity (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:2179593) {
   code: 'UserBotError',
-  innerHttpError: undefined
+  innerHttpError: {
+    statusCode: 401,
+    body: { 'jwt-auth-error': 'authorization header not found' }
+  }
 }
-debug stopping web socket client
-debug stopping web socket client
-debug started web socket client
-debug started web socket client
-log Waiting for connection of endpoint: http://localhost:3978/api/messages
-log waiting for 1 resources: http://localhost:3978/api/messages
-log wait-on(318084) Timed out waiting for: http://localhost:3978/api/messages; exiting with error
-debug Telemetry: agents-playground-server/error {"cleanProperties":{"stack":"\"Error: Timed out waiting for: http://localhost:3978/api/messages\\n    at <REDACTED: user-file-path>:2:1497483\\n    at doInnerSub (<REDACTED: user-file-path>:2:2727343)\\n    at outerNext (<REDACTED: user-file-path>:2:2727195)\\n    at OperatorSubscriber._this._next (<REDACTED: user-file-path>:2:2843063)\\n    at Subscriber.next (<REDACTED: user-file-path>:5:1001770)\\n    at AsyncAction.<anonymous> (<REDACTED: user-file-path>:5:1072339)\\n    at AsyncAction._execute (<REDACTED: user-file-path>:2:383912)\\n    at AsyncAction.execute (<REDACTED: user-file-path>:2:383685)\\n    at AsyncScheduler.flush (<REDACTED: user-file-path>:5:243755)\\n    at listOnTimeout (node:internal/timers:573:17)\"","message":"\"Timed out waiting for: http://localhost:3978/api/messages\""}}
+debug Telemetry: agents-playground-server/error {"cleanProperties":{"stack":"\"Error: Request failed with status code 401\\n    at exports.UserBotError (<REDACTED: user-file-path>:2:1255135)\\n    at ConversationUpdateUserBotAccessor.handleAxiosError (<REDACTED: user-file-path>:2:2235297)\\n    at ConversationUpdateUserBotAccessor.sendActivity (<REDACTED: user-file-path>:2:2234570)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\\n    at async ConversationUpdateUserBotAccessor.sendInstallationMemberAddedActivity (<REDACTED: user-file-path>:5:331700)\"","message":"\"Request failed with status code 401\"","code":"\"UserBotError\"","innerHttpError":"{\"statusCode\":401,\"body\":{\"jwt-auth-error\":\"authorization header not found\"}}"}}
 
-log Events recording disabled.
-debug Telemetry: agents-playground-server/eventsRecording {"cleanProperties":{"enabled":"false"}}
-
-debug Telemetry: agents-playground-server/getConfig {"cleanProperties":{"internalConfig":"{\"locale\":\"en-US\",\"localTimezone\":\"America/Chicago\",\"channelId\":\"msteams\",\"debugConfig\":{\"eventsRecordingEnabled\":false}}"}}
-
-debug Telemetry: agents-playground-server/error {"cleanProperties":{"stack":"\"Error: Error\\n    at exports.UserBotError (<REDACTED: user-file-path>:2:1255135)\\n    at ConversationUpdateUserBotAccessor.handleAxiosError (<REDACTED: user-file-path>:2:2235297)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\\n    at async ConversationUpdateUserBotAccessor.sendActivity (<REDACTED: user-file-path>:2:2234559)\\n    at async ConversationUpdateUserBotAccessor.sendInstallationMemberAddedActivity (<REDACTED: user-file-path>:5:331700)\"","message":"\"Error\"","code":"\"UserBotError\""}}
-
-log InternalServiceError: Error
+log InternalServiceError: Request failed with status code 401
     at exports.UserBotError (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:1255135)
     at ConversationUpdateUserBotAccessor.handleAxiosError (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:2235297)
+    at ConversationUpdateUserBotAccessor.sendActivity (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:2234570)
     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async ConversationUpdateUserBotAccessor.sendActivity (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:2234559)
     at async ConversationUpdateUserBotAccessor.sendInstallationMemberAddedActivity (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:5:331700) {
   code: 'UserBotError',
-  innerHttpError: undefined
+  innerHttpError: {
+    statusCode: 401,
+    body: { 'jwt-auth-error': 'authorization header not found' }
+  }
 }
-debug Telemetry: agents-playground-server/error {"cleanProperties":{"stack":"\"Error: Error\\n    at exports.UserBotError (<REDACTED: user-file-path>:2:1255135)\\n    at InstallationUserBotAccessor.handleAxiosError (<REDACTED: user-file-path>:2:2235297)\\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\\n    at async InstallationUserBotAccessor.sendActivity (<REDACTED: user-file-path>:2:2234559)\\n    at async InstallationUserBotAccessor.sendInstallationUpdateActivity (<REDACTED: user-file-path>:2:2179593)\"","message":"\"Error\"","code":"\"UserBotError\""}}
-
-log InternalServiceError: Error
-    at exports.UserBotError (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:1255135)
-    at InstallationUserBotAccessor.handleAxiosError (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:2235297)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async InstallationUserBotAccessor.sendActivity (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:2234559)
-    at async InstallationUserBotAccessor.sendInstallationUpdateActivity (C:\Users\astalati\AppData\Roaming\npm\node_modules\@microsoft\m365agentsplayground\dist\index.js:2:2179593) {
-  code: 'UserBotError',
-  innerHttpError: undefined
-}
-debug stopping web socket client
-debug stopping web socket client
-debug started web socket client
-debug started web socket client
-log Waiting for connection of endpoint: http://localhost:3978/api/messages
-log waiting for 1 resources: http://localhost:3978/api/messages
-log wait-on(318084) complete
-log Events recording disabled.
-debug Telemetry: agents-playground-server/eventsRecording {"cleanProperties":{"enabled":"false"}}
-
-debug Telemetry: agents-playground-server/getConfig {"cleanProperties":{"internalConfig":"{\"locale\":\"en-US\",\"localTimezone\":\"America/Chicago\",\"channelId\":\"msteams\",\"debugConfig\":{\"eventsRecordingEnabled\":false}}"}}
-
-debug Telemetry: agents-playground-server/sendActivity {"cleanProperties":{"activityType":"installationUpdate","conversationId":"fdfec29f-aab2-496b-898a-2d7bb2e2d115","headers":"{\"x-ms-agents-playground\":\"true\"}"}}
-
-debug Telemetry: agents-playground-server/sendActivity {"cleanProperties":{"activityType":"conversationUpdate","conversationId":"fdfec29f-aab2-496b-898a-2d7bb2e2d115","headers":"{\"x-ms-agents-playground\":\"true\"}"}}
-
-debug Telemetry: agents-playground-server/sendActivity {"cleanProperties":{"activityType":"message","conversationId":"fdfec29f-aab2-496b-898a-2d7bb2e2d115","headers":"{\"x-ms-agents-playground\":\"true\"}"}}
-
-debug stopping web socket client
-debug stopping web socket client
-debug started web socket client
-debug started web socket client
-log Waiting for connection of endpoint: http://localhost:3978/api/messages
-log waiting for 1 resources: http://localhost:3978/api/messages
-log wait-on(318084) complete
-log Events recording disabled.
-debug Telemetry: agents-playground-server/eventsRecording {"cleanProperties":{"enabled":"false"}}
-
-debug Telemetry: agents-playground-server/getConfig {"cleanProperties":{"internalConfig":"{\"locale\":\"en-US\",\"localTimezone\":\"America/Chicago\",\"channelId\":\"msteams\",\"debugConfig\":{\"eventsRecordingEnabled\":false}}"}}
-
-debug Telemetry: agents-playground-server/sendActivity {"cleanProperties":{"activityType":"installationUpdate","conversationId":"fdfec29f-aab2-496b-898a-2d7bb2e2d115","headers":"{\"x-ms-agents-playground\":\"true\"}"}}
-
-debug Telemetry: agents-playground-server/sendActivity {"cleanProperties":{"activityType":"conversationUpdate","conversationId":"fdfec29f-aab2-496b-898a-2d7bb2e2d115","headers":"{\"x-ms-agents-playground\":\"true\"}"}}
-
-debug Telemetry: agents-playground-server/sendActivity {"cleanProperties":{"activityType":"message","conversationId":"fdfec29f-aab2-496b-898a-2d7bb2e2d115","headers":"{\"x-ms-agents-playground\":\"true\"}"}}
-
 debug stopping web socket client
 debug stopping web socket client

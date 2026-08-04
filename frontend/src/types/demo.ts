@@ -18,6 +18,7 @@ export interface DocHit {
   classification: Classification
   snippet: string
   score: number | null
+  entitled_to?: string[]
 }
 
 export interface InvokeRequest {

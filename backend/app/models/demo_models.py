@@ -53,6 +53,10 @@ class DocHit(BaseModel):
     classification: Classification
     snippet: str = Field(default="", description="Short excerpt shown in the UI")
     score: Optional[float] = None
+    entitled_to: List[str] = Field(
+        default_factory=list,
+        description="Personas/desks entitled to this document (for the access-map UI)",
+    )
 
 
 class InvokeRequest(BaseModel):
